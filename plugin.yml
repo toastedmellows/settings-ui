@@ -1,0 +1,17 @@
+name: Settings
+version: '${version}'
+main: com.example.settings.SettingsPlugin
+api-version: '26.3'
+description: Per-player /settings menu (chat visibility and more).
+commands:
+  settings:
+    description: Open your personal settings menu.
+    usage: /settings
+    permission: settings.use
+permissions:
+  settings.use:
+    description: Allows opening the /settings menu.
+    default: true
+  settings.tpa.bypass:
+    description: Lets staff send teleport requests to players who turned TPA off.
+    default: op

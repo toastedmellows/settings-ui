@@ -1,0 +1,3 @@
+# If true, a player who has turned Public Chat off cannot send public chat
+# messages until they turn it back on (they get a reminder instead).
+block-sending-when-disabled: true
