@@ -16,3 +16,5 @@ Install Gradle 9.1+ (any Java 17+ works to run it), then run `build.bat` (Window
 
 ## Add a setting
 Add a constant to `Setting.java` and check it with `SettingsManager#isEnabled`. The menu lays out up to 9 settings automatically.
+
+## Make sure you know what you are doing!
