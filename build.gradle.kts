@@ -18,6 +18,19 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
+sourceSets {
+    main {
+        java {
+            setSrcDirs(listOf("."))
+            include("*.java")
+        }
+        resources {
+            setSrcDirs(listOf("."))
+            include("plugin.yml", "config.yml")
+        }
+    }
+}
+
 tasks.processResources {
     filesMatching("plugin.yml") {
         expand("version" to project.version)
