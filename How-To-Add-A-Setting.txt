@@ -1,0 +1,132 @@
+HOW TO ADD YOUR OWN SETTING TO THE /settings MENU
+==================================================
+
+Adding a toggle takes four small edits. This guide uses an example called
+"Private Messages": when a player turns it off, other people can no longer
+use /msg on them. You do everything on GitHub, and you can swap in your own
+name and idea.
+
+(If your repo has the files in src/main/java/com/example/settings/, edit them
+there. If all the files sit at the top of the repo, edit them at the top.)
+
+
+STEP 1 - ADD THE TOGGLE
+-----------------------
+Open Setting.java on GitHub and click the pencil icon. Add this line right
+under the ALL_CHAT(...) line:
+
+    PRIVATE_MESSAGES("private_messages", Material.WRITTEN_BOOK, true),
+
+The pattern is:  NAME("key", Material.ICON, startsOn)
+
+ - NAME     is in CAPITAL_LETTERS and is what you use in code.
+ - "key"    is lowercase with underscores. It must match step 2.
+ - ICON     can be any real Minecraft item name in capitals with
+            underscores, like DIAMOND, BELL or WRITTEN_BOOK. A name that
+            does not exist will make the build fail.
+ - startsOn is true (starts ON for new players) or false (starts OFF).
+
+The menu holds up to 9 toggles.
+
+
+STEP 2 - GIVE IT A NAME
+-----------------------
+Open Translations.java and find the English block (the first one). Add these
+three lines anywhere in that block, for example right above the
+msg.tpa_blocked line:
+
+setting.private_messages.name=Private Messages
+setting.private_messages.desc=Let other players send you private messages.
+msg.pm_blocked=%s is not accepting private messages.
+
+The key in "setting.private_messages.name" must match the key from step 1.
+Other languages show the English text until you translate them.
+
+After steps 1 and 2 you already have a button in the menu, but it does
+nothing yet. Steps 3 and 4 make it work.
+
+
+STEP 3 - MAKE IT DO SOMETHING
+-----------------------------
+On GitHub, click  Add file > Create new file, name it PmListener.java, and
+paste this:
+
+package com.example.settings;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+
+import java.util.Set;
+
+public final class PmListener implements Listener {
+
+    private static final Set<String> PM_COMMANDS =
+            Set.of("msg", "tell", "w", "whisper", "m", "t", "pm", "emsg", "etell", "ewhisper");
+
+    private final SettingsManager manager;
+
+    public PmListener(SettingsManager manager) {
+        this.manager = manager;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        String[] parts = event.getMessage().substring(1).trim().split("\\s+");
+        if (parts.length < 2) return;
+
+        String command = parts[0].toLowerCase();
+        int colon = command.indexOf(':');
+        if (colon >= 0) command = command.substring(colon + 1);
+        if (!PM_COMMANDS.contains(command)) return;
+
+        Player sender = event.getPlayer();
+        Player target = Bukkit.getPlayer(parts[1]);
+        if (target == null || target.equals(sender)) return;
+
+        if (!manager.isEnabled(target, Setting.PRIVATE_MESSAGES)) {
+            event.setCancelled(true);
+            sender.sendMessage(Component.text(
+                    manager.tr(sender, "msg.pm_blocked", target.getName()), NamedTextColor.RED));
+        }
+    }
+}
+
+
+STEP 4 - TURN IT ON
+-------------------
+Open SettingsPlugin.java, click the pencil, and add this line under the other
+registerEvents lines:
+
+        getServer().getPluginManager().registerEvents(new PmListener(manager), this);
+
+
+FINISHING UP
+------------
+Commit each change. The build on the Actions tab runs by itself. When it has
+a green check, open the run, download "Settings-jar" under Artifacts, unzip
+it, and put the .jar in your server's plugins folder (delete the old Settings
+jar first). Restart the server.
+
+If the build shows a red X, click the failed step and read the error. It
+usually names the file and line with the problem (a typo, a missing comma, or
+a key that does not match).
+
+
+HOW THE CODE WORKS (SO YOU CAN ADAPT IT)
+----------------------------------------
+    manager.isEnabled(player, Setting.X)
+
+is the check that tells you whether a player has toggle X turned on.
+Everything else in the listener is just: "when this thing happens, look at
+that setting and decide whether to block or allow it."
+
+To make a different toggle, change:
+ - the NAME and "key" in Setting.java,
+ - the text lines in Translations.java,
+ - what the listener watches for (a command, a chat message, a join, etc.).
